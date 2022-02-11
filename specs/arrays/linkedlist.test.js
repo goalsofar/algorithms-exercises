@@ -23,67 +23,108 @@
   you work
 */
 
-class LinkedList {
-  constructor() {
-    this.head = null;
-    this.tail = null;
-    this.length = 0;
-  }
-  push(value) {
-    const node = new Node(value);
-    this.length++;
-    if (!this.head) {
-      this.head = node;
-    } else {
-      this.tail.next = node;
-    }
-    this.tail = node;
-  }
-  pop() {
-    return this.delete(this.length - 1);
-  }
-  _find(index) {
-    if (index >= this.length) return null;
-    let current = this.head;
-    for (let i = 0; i < index; i++) {
-      current = current.next;
-    }
+class Node {
+  #value;
+  #next;
+  #prev;
 
-    return current;
+  constructor(value, next, prev) {
+    this.#value = value;
+    this.#next = next;
+    this.#prev = prev;
   }
-  get(index) {
-    const node = this._find(index);
-    if (!node) return void 0;
-    return node.value;
-  }
-  delete(index) {
-    if (index === 0) {
-      const head = this.head;
-      if (head) {
-        this.head = head.next;
-      } else {
-        this.head = null;
-        this.tail = null;
-      }
-      this.length--;
-      return head.value;
-    }
 
-    const node = this._find(index - 1);
-    const excise = node.next;
-    if (!excise) return null;
-    node.next = excise.next;
-    if (!node.next) this.tail = node.next;
-    this.length--;
-    return excise.value;
+  set value(value) {
+    this.#value = value;
+  }
+
+  get value() {
+    return this.#value;
+  }
+
+  set next(next) {
+    this.#next = next;
+  }
+
+  get next() {
+    return this.#next;
+  }
+
+  set prev(prev) {
+    this.#prev = prev;
+  }
+
+  get prev() {
+    return this.#prev;
   }
 }
 
-class Node {
-  constructor(value) {
-    this.value = value;
-    this.next = null;
+class LinkedList {
+  #first = undefined;
+  #last = undefined;
+  #length = 0;
+
+  get length() {
+    return this.#length;
   }
+
+  set length(val) {
+    this.#length = val;
+  }
+
+  push = (val) => {
+    if (!this.#first) {
+      const node = new Node(val, null, null);
+      this.#first = node;
+      this.#last = node;
+    } else {
+      const node = new Node(val, null, this.#last);
+      // console.log(node.prev.value);
+      this.#last.next = node;
+      this.#last = node;
+    }
+    this.length++;
+  };
+
+  pop = () => {
+    if (!this.#last) {
+      return undefined;
+    } else {
+      const item = this.#last;
+      this.#last = this.#last.prev;
+      this.length--;
+      if (this.length === 0) {
+        this.#first = null;
+      }
+      return item.value;
+    }
+  };
+
+  get = (index) => this.#getNode(index).value;
+
+  #getNode = (index) => {
+    let item = this.#first;
+    for (let i = 0; i < index; i++) {
+      item = item.next;
+    }
+    return item;
+  };
+
+  delete = (index) => {
+    const node = this.#getNode(index);
+    if (node.prev) {
+      node.prev.next = node.next;
+      if (node.next) {
+        node.next.prev = node.prev;
+      }
+    } else {
+      this.#first = node.next;
+    }
+    this.length--;
+    if (this.length === 0) {
+      this.#first = null;
+    }
+  };
 }
 
 // unit tests

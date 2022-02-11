@@ -22,16 +22,162 @@
 */
 
 class Tree {
-  // code goes here
+  constructor() {
+    this.root = null;
+  }
+
+  add = (value) => {
+    if (!this.root) {
+      const node = new Node(value);
+      this.root = node;
+      return;
+    } else {
+      this.root.add(value);
+    }
+  };
+
+  toObject() {
+    return this.root.serialize();
+  }
 }
 
+// you might consider using a Node class too
 class Node {
-  // code also goes here
-}
+  constructor(val) {
+    this.value = val;
+    this.right = null;
+    this.left = null;
+  }
 
+  get depth() {
+    return Math.max(this.leftDepth, this.rightDepth) + 1;
+  }
+
+  get leftDepth() {
+    return this.left ? this.left.depth : 0;
+  }
+
+  get rightDepth() {
+    return this.right ? this.right.depth : 0;
+  }
+
+  get isBalanced() {
+    return Math.abs(this.rightDepth - this.leftDepth) < 2;
+  }
+
+  get isRightHeavy() {
+    return this.rightDepth > this.leftDepth;
+  }
+
+  get isLeftHeavy() {
+    return this.leftDepth > this.rightDepth;
+  }
+
+  rotateLeft = () => {
+    const node = this;
+    const rightChild = node.right;
+    const leftChild = node.left;
+
+    // 1. B becomes the new root
+    const rightChildValue = rightChild?.value;
+    rightChild.value = node.value;
+    node.value = rightChildValue;
+
+    node.right = rightChild?.right;
+    node.left = rightChild;
+
+    // RightChildin leftist'a tulee right
+    rightChild.right = rightChild?.left;
+    rightChild.left = leftChild;
+  };
+
+  rotateRight = () => {
+    const node = this;
+    const leftChild = node.left;
+    const rightChild = node.right;
+
+    // 1. b becomes the new root
+    const leftChildValue = leftChild?.value;
+    leftChild.value = node.value;
+    node.value = leftChildValue;
+
+    node.left = leftChild?.left;
+    node.right = leftChild;
+
+    // leftChildin leftist'a tulee left
+    leftChild.left = leftChild?.right;
+    leftChild.right = rightChild;
+  };
+
+  #balanceNode = () => {
+    if (!this.isBalanced) {
+      if (this.isRightHeavy) {
+        if (this.right.isRightHeavy) {
+          // Unbalanced right heavy tree with rightheavy child can be corrected with a single left rotation
+          this.rotateLeft();
+        } else {
+          // Unbalanced right heavy tree with leftheavy child can be corrected with a left-right rotation
+          // First right rotation on the left heavy child
+          // Then left rotation on the right heavy node itself
+          this.right.rotateRight();
+          this.rotateLeft;
+        }
+      } else {
+        // Else branch: Tree is left heavy
+        if (this.left.isLeftHeavy) {
+          this.rotateRight();
+        } else {
+          // right heavy child
+          this.left.rotateLeft();
+          this.rotateRight;
+        }
+      }
+    }
+  };
+
+  add = (value) => {
+    if (value < this.value) {
+      if (this.left === null) {
+        this.left = new Node(value);
+      } else {
+        // Add to the tree recursively
+        this.left.add(value);
+        // Once recursive call returns, perform balancing if necessary
+        this.#balanceNode();
+      }
+    } else {
+      if (this.right === null) {
+        this.right = new Node(value);
+      } else {
+        this.right.add(value);
+        this.#balanceNode();
+      }
+    }
+
+    /*
+      At least my solution requires that balancing is run every time to keep the 
+      tree in a shape that will be set right by balancing in the nodes above
+      If balancing is not run after insert, what happens is that the test data
+      ends up after insert of 1 in the following structure: 3 - left 2 - right 1
+      And the balancing of 3 (which would be firt to run balancing) would not achieve correct structure
+      from this starting position.
+      AND ALL TEXT ABOVE IS PROBABLY WRONG:
+      I do not know why byt this only works if #balanceNode is run twice.... sigh.
+    */
+
+    this.#balanceNode();
+  };
+
+  serialize() {
+    const ans = { value: this.value };
+    ans.left = this.left === null ? null : this.left.serialize();
+    ans.right = this.right === null ? null : this.right.serialize();
+    return ans;
+  }
+}
 // unit tests
 // do not modify the below code
-describe.skip("AVL Tree", function () {
+describe("AVL Tree", function () {
   test("creates a correct tree", () => {
     const nums = [3, 7, 4, 6, 5, 1, 10, 2, 9, 8];
     const tree = new Tree();
